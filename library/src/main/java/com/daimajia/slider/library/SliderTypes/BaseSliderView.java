@@ -118,6 +118,17 @@ public abstract class BaseSliderView {
     }
 
     /**
+     * Get a resource id, transform it to a Fresco compatible Uri and set it as the image to load.
+     * @param Android Resource ID e.g.: R.drawable.yourDrawable
+     * @return
+     */
+    public BaseSliderView image(Integer resId) {
+        String url = "res:///" + resId;
+        mUrl = url;
+        return this;
+    }
+
+    /**
      * set a url as a image that preparing to load, http://frescolib.org/docs/supported-uris.html#_
      * @param smallImageUrl
      * @return
@@ -251,6 +262,9 @@ public abstract class BaseSliderView {
 
         switch (mScaleType){
             case Fit:
+                hierarchy.setActualImageScaleType(ScalingUtils.ScaleType.FIT_XY);
+                break;
+            case FitCenterCrop: 
                 hierarchy.setActualImageScaleType(ScalingUtils.ScaleType.FIT_CENTER);
                 break;
             case CenterCrop:
