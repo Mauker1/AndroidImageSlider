@@ -2,6 +2,7 @@ package com.daimajia.slider.library.SliderTypes;
 
 import android.content.Context;
 import android.graphics.drawable.Animatable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
@@ -16,6 +17,8 @@ import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.image.ImageInfo;
 import com.facebook.imagepipeline.request.ImageRequest;
+
+import java.io.File;
 
 /**
  * When you want to make your own slider view, you must extends from this class.
@@ -119,12 +122,22 @@ public abstract class BaseSliderView {
 
     /**
      * Get a resource id, transform it to a Fresco compatible Uri and set it as the image to load.
-     * @param Android Resource ID e.g.: R.drawable.yourDrawable
-     * @return
+     * @param resId Android Resource ID e.g.: R.drawable.yourDrawable
+     * @return Returns a BaseSliderView with the image resource set.
      */
     public BaseSliderView image(Integer resId) {
-        String url = "res:///" + resId;
-        mUrl = url;
+        mUrl = "res:///" + resId;
+        return this;
+    }
+
+    /**
+     * Get a resource id, transform it to a Fresco compatible Uri and set it as the image to load.
+     * @param file A File object.
+     * @return Returns a BaseSliderView with the image resource set.
+     * TODO - Check for null or valid files.
+     */
+    public BaseSliderView image(File file) {
+        mUrl = Uri.fromFile(file).toString();
         return this;
     }
 
