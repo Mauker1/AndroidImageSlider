@@ -5,6 +5,7 @@ import android.graphics.drawable.Animatable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.View;
 
 import com.daimajia.slider.library.R;
@@ -73,7 +74,7 @@ public abstract class BaseSliderView {
     /**
      * the placeholder image when loading image from url or file.
      * @param resId Image resource id
-     * @return
+     * @return the updated SliderView.
      */
     public BaseSliderView empty(int resId){
         mEmptyPlaceHolderRes = resId;
@@ -83,7 +84,7 @@ public abstract class BaseSliderView {
     /**
      * determine whether remove the image which failed to download or load from file
      * @param disappear
-     * @return
+     * @return the updated SliderView.
      */
     public BaseSliderView errorDisappear(boolean disappear){
         mErrorDisappear = disappear;
@@ -93,7 +94,7 @@ public abstract class BaseSliderView {
     /**
      * if you set errorDisappear false, this will set a error placeholder image.
      * @param resId image resource id
-     * @return
+     * @return the updated SliderView.
      */
     public BaseSliderView error(int resId){
         mErrorPlaceHolderRes = resId;
@@ -103,7 +104,7 @@ public abstract class BaseSliderView {
     /**
      * the description of a slider image.
      * @param description
-     * @return
+     * @return the updated SliderView.
      */
     public BaseSliderView description(String description){
         mDescription = description;
@@ -111,9 +112,9 @@ public abstract class BaseSliderView {
     }
 
     /**
-     * set a url as a image that preparing to load, http://frescolib.org/docs/supported-uris.html#_
-     * @param url
-     * @return
+     * Set a url as an image that is preparing to load.
+     * @param url A Fresco compatible URI, as you can see on: http://frescolib.org/docs/supported-uris.html
+     * @return the updated SliderView.
      */
     public BaseSliderView image(String url){
         mUrl = url;
@@ -133,7 +134,7 @@ public abstract class BaseSliderView {
     /**
      * Get a resource id, transform it to a Fresco compatible Uri and set it as the image to load.
      * @param file A File object.
-     * @return Returns a BaseSliderView with the image resource set.
+     * @return Returns the BaseSliderView with the image resource set.
      * TODO - Check for null or valid files.
      */
     public BaseSliderView image(File file) {
@@ -144,7 +145,7 @@ public abstract class BaseSliderView {
     /**
      * set a url as a image that preparing to load, http://frescolib.org/docs/supported-uris.html#_
      * @param smallImageUrl
-     * @return
+     * @return the updated SliderView.
      */
     public BaseSliderView imageLowRes(String smallImageUrl){
         mSmallImageUrl = smallImageUrl;
@@ -154,7 +155,7 @@ public abstract class BaseSliderView {
     /**
      * set a url as a image that preparing to load, http://frescolib.org/docs/supported-uris.html#_
      * @param idDrawable
-     * @return
+     * @return the updated SliderView.
      */
     public BaseSliderView imagePlaceHolder(Integer idDrawable){
         mPlaceHolderResId = idDrawable;
@@ -166,7 +167,7 @@ public abstract class BaseSliderView {
     /**
      * lets users add a bundle of additional information
      * @param bundle
-     * @return
+     * @return the updated SliderView.
      */
     public BaseSliderView bundle(Bundle bundle){
         mBundle = bundle;
@@ -200,7 +201,7 @@ public abstract class BaseSliderView {
     /**
      * set a slider image click listener
      * @param l
-     * @return
+     * @return the updated SliderView.
      */
     public BaseSliderView setOnSliderClickListener(OnSliderClickListener l){
         mOnSliderClickListener = l;
@@ -238,6 +239,8 @@ public abstract class BaseSliderView {
                     @Nullable ImageInfo imageInfo,
                     @Nullable Animatable anim) {
                 if(v.findViewById(R.id.loading_bar) != null){
+
+                    Log.d("lib","Loaded " +  id);
                     v.findViewById(R.id.loading_bar).setVisibility(View.INVISIBLE);
                 }
                 if (imageInfo == null) {
@@ -252,6 +255,8 @@ public abstract class BaseSliderView {
             @Override
             public void onFailure(String id, Throwable throwable) {
                 if(v.findViewById(R.id.loading_bar) != null){
+                    Log.d("lib","Failed to load " +  id);
+                    Log.w("lib",throwable.getMessage());
                     v.findViewById(R.id.loading_bar).setVisibility(View.INVISIBLE);
                 }
             }
@@ -287,14 +292,19 @@ public abstract class BaseSliderView {
                 hierarchy.setActualImageScaleType(ScalingUtils.ScaleType.CENTER_INSIDE);
                 break;
         }
+//
+//        if(mPlaceHolderResId!=null){
+//            hierarchy.setPlaceholderImage(mPlaceHolderResId);
+//        }
 
-        if(mPlaceHolderResId!=null){
-            hierarchy.setPlaceholderImage(mPlaceHolderResId);
+        if(getEmpty() !=  0) {
+            hierarchy.setPlaceholderImage(getEmpty());
         }
+
+
 
         targetImageView.setHierarchy(hierarchy);
         targetImageView.setController(controller);
-
    }
 
 
@@ -311,7 +321,7 @@ public abstract class BaseSliderView {
     /**
      * the extended class have to implement getView(), which is called by the adapter,
      * every extended class response to render their own view.
-     * @return
+     * @return The View.
      */
     public abstract View getView();
 
@@ -324,19 +334,19 @@ public abstract class BaseSliderView {
     }
 
     public interface OnSliderClickListener {
-        public void onSliderClick(BaseSliderView slider);
+        void onSliderClick(BaseSliderView slider);
     }
 
     /**
      * when you have some extra information, please put it in this bundle.
-     * @return
+     * @return The Bundle with the extra info for the slider.
      */
     public Bundle getBundle(){
         return mBundle;
     }
 
     public interface ImageLoadListener{
-        public void onStart(BaseSliderView target);
-        public void onEnd(boolean result,BaseSliderView target);
+        void onStart(BaseSliderView target);
+        void onEnd(boolean result,BaseSliderView target);
     }
 }
