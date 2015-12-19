@@ -48,8 +48,6 @@ public abstract class BaseSliderView {
 
     private String mSmallImageUrl;
 
-    private Integer mPlaceHolderResId;
-
     protected OnSliderClickListener mOnSliderClickListener;
 
     private boolean mErrorDisappear;
@@ -153,18 +151,6 @@ public abstract class BaseSliderView {
     }
 
     /**
-     * set a url as a image that preparing to load, http://frescolib.org/docs/supported-uris.html#_
-     * @param idDrawable
-     * @return the updated SliderView.
-     */
-    public BaseSliderView imagePlaceHolder(Integer idDrawable){
-        mPlaceHolderResId = idDrawable;
-        return this;
-    }
-
-
-
-    /**
      * lets users add a bundle of additional information
      * @param bundle
      * @return the updated SliderView.
@@ -243,9 +229,6 @@ public abstract class BaseSliderView {
                     Log.d("lib","Loaded " +  id);
                     v.findViewById(R.id.loading_bar).setVisibility(View.INVISIBLE);
                 }
-                if (imageInfo == null) {
-                    return;
-                }
             }
 
             @Override
@@ -266,15 +249,17 @@ public abstract class BaseSliderView {
 
 
         DraweeController controller = null;
-        if(mUrl!=null && mSmallImageUrl == null){
+        if(mUrl!=null && mSmallImageUrl == null) {
             controller = Fresco.newDraweeControllerBuilder().setControllerListener(controllerListener)
                     .setImageRequest(ImageRequest.fromUri(mUrl))
                     .build();
-        }else if(mUrl!=null && mSmallImageUrl != null){
+        }
+        else if(mUrl!=null) {
             controller = Fresco.newDraweeControllerBuilder().setControllerListener(controllerListener).setLowResImageRequest(ImageRequest.fromUri(mSmallImageUrl))
                     .setImageRequest(ImageRequest.fromUri(mUrl))
                     .build();
-        }else{
+        }
+        else {
             return;
         }
 
@@ -292,11 +277,8 @@ public abstract class BaseSliderView {
                 hierarchy.setActualImageScaleType(ScalingUtils.ScaleType.CENTER_INSIDE);
                 break;
         }
-//
-//        if(mPlaceHolderResId!=null){
-//            hierarchy.setPlaceholderImage(mPlaceHolderResId);
-//        }
 
+        // If an empty placeholder is set, use it.
         if(getEmpty() !=  0) {
             hierarchy.setPlaceholderImage(getEmpty());
         }
