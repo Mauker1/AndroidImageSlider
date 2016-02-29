@@ -2,6 +2,7 @@ package com.daimajia.slider.library.SliderTypes;
 
 import android.content.Context;
 import android.graphics.drawable.Animatable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -38,6 +39,9 @@ public abstract class BaseSliderView {
      * Error place holder image.
      */
     private int mErrorPlaceHolderRes;
+
+    private Drawable mErrorPlaceHolder = null;
+
 
     /**
      * Empty imageView placeholder.
@@ -100,6 +104,16 @@ public abstract class BaseSliderView {
     }
 
     /**
+     *
+     * @param d
+     * @return
+     */
+    public BaseSliderView error(Drawable d) {
+        mErrorPlaceHolder = d;
+        return this;
+    }
+
+    /**
      * the description of a slider image.
      * @param description
      * @return the updated SliderView.
@@ -137,6 +151,7 @@ public abstract class BaseSliderView {
      */
     public BaseSliderView image(File file) {
         mUrl = Uri.fromFile(file).toString();
+        Log.d("Slider",mUrl);
         return this;
     }
 
@@ -175,6 +190,8 @@ public abstract class BaseSliderView {
     public int getError(){
         return mErrorPlaceHolderRes;
     }
+
+    public Drawable getErrorDrawable() { return mErrorPlaceHolder; }
 
     public String getDescription(){
         return mDescription;
@@ -225,8 +242,6 @@ public abstract class BaseSliderView {
                     @Nullable ImageInfo imageInfo,
                     @Nullable Animatable anim) {
                 if(v.findViewById(R.id.loading_bar) != null){
-
-                    Log.d("lib","Loaded " +  id);
                     v.findViewById(R.id.loading_bar).setVisibility(View.INVISIBLE);
                 }
             }
@@ -238,15 +253,14 @@ public abstract class BaseSliderView {
             @Override
             public void onFailure(String id, Throwable throwable) {
                 if(v.findViewById(R.id.loading_bar) != null){
-                    Log.d("lib","Failed to load " +  id);
-                    Log.w("lib",throwable.getMessage());
+                    Log.d("lib", "Failed to load " + id);
+                    Log.w("lib", throwable.getMessage());
                     v.findViewById(R.id.loading_bar).setVisibility(View.INVISIBLE);
                 }
             }
         };
 
         GenericDraweeHierarchy hierarchy = targetImageView.getHierarchy();
-
 
         DraweeController controller = null;
         if(mUrl!=null && mSmallImageUrl == null) {
@@ -283,7 +297,11 @@ public abstract class BaseSliderView {
             hierarchy.setPlaceholderImage(getEmpty());
         }
 
+        Drawable d = getErrorDrawable();
 
+        if (d != null) {
+            hierarchy.setFailureImage(d);
+        }
 
         targetImageView.setHierarchy(hierarchy);
         targetImageView.setController(controller);
