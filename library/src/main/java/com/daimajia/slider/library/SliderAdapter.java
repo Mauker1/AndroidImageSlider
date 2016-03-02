@@ -17,9 +17,13 @@ public class SliderAdapter extends PagerAdapter implements BaseSliderView.ImageL
     private Context mContext;
     private ArrayList<BaseSliderView> mImageContents;
 
+    public SliderAdapter() {
+        mImageContents = new ArrayList<>();
+    }
+
     public SliderAdapter(Context context){
-        mContext = context;
-        mImageContents = new ArrayList<BaseSliderView>();
+//        mContext = context;
+        mImageContents = new ArrayList<>();
     }
 
     public <T extends BaseSliderView> void addSlider(T slider){
@@ -95,7 +99,7 @@ public class SliderAdapter extends PagerAdapter implements BaseSliderView.ImageL
      */
     @Override
     public void onEnd(boolean result, BaseSliderView target) {
-        if(target.isErrorDisappear() == false || result == true){
+        if(!target.isErrorDisappear() || result){
             return;
         }
         for (BaseSliderView slider: mImageContents){

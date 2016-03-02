@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 
 import com.daimajia.slider.library.R;
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -59,6 +60,8 @@ public abstract class BaseSliderView {
     private ImageLoadListener mLoadListener;
 
     private String mDescription;
+
+    private boolean isSVG;
 
     /**
      * Scale type of the image.
@@ -175,6 +178,11 @@ public abstract class BaseSliderView {
         return this;
     }
 
+    public BaseSliderView setSVG(boolean isSVG) {
+        this.isSVG = isSVG;
+        return this;
+    }
+
     public String getUrl(){
         return mUrl;
     }
@@ -263,13 +271,15 @@ public abstract class BaseSliderView {
         GenericDraweeHierarchy hierarchy = targetImageView.getHierarchy();
 
         DraweeController controller = null;
+
         if(mUrl!=null && mSmallImageUrl == null) {
             controller = Fresco.newDraweeControllerBuilder().setControllerListener(controllerListener)
                     .setImageRequest(ImageRequest.fromUri(mUrl))
                     .build();
         }
         else if(mUrl!=null) {
-            controller = Fresco.newDraweeControllerBuilder().setControllerListener(controllerListener).setLowResImageRequest(ImageRequest.fromUri(mSmallImageUrl))
+            controller = Fresco.newDraweeControllerBuilder().setControllerListener(controllerListener)
+                    .setLowResImageRequest(ImageRequest.fromUri(mSmallImageUrl))
                     .setImageRequest(ImageRequest.fromUri(mUrl))
                     .build();
         }
@@ -307,7 +317,9 @@ public abstract class BaseSliderView {
         targetImageView.setController(controller);
    }
 
-
+    protected void bindEventAndShow(final View v, ImageView target) {
+        // TODO
+    }
 
     public BaseSliderView setScaleType(ScaleType type){
         mScaleType = type;
@@ -316,6 +328,10 @@ public abstract class BaseSliderView {
 
     public ScaleType getScaleType(){
         return mScaleType;
+    }
+
+    public boolean isSVG() {
+        return isSVG;
     }
 
     /**

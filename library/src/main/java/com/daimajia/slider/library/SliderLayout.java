@@ -192,6 +192,9 @@ public class SliderLayout extends RelativeLayout {
         mViewPager.setOnTouchListener(new OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                if (mSliderAdapter.getCount() < 2) {
+                    return true;
+                }
                 int action = event.getAction();
                 switch (action) {
                     case MotionEvent.ACTION_UP:
@@ -234,8 +237,16 @@ public class SliderLayout extends RelativeLayout {
 
     public <T extends BaseSliderView> void addSlider(T imageContent) {
         mSliderAdapter.addSlider(imageContent);
+
+        if (mSliderAdapter.getCount() < 2) {
+            stopAutoCycle();
+        }
+        else if (mAutoCycle) {
+            recoverCycle();
+        }
     }
 
+    // TODO - Fix possible leak. Maybe I don't have to use the handleMessage.
     private android.os.Handler mh = new android.os.Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -256,6 +267,10 @@ public class SliderLayout extends RelativeLayout {
      * @param autoRecover if recover after user touches the slider.
      */
     public void startAutoCycle(long delay, long duration, boolean autoRecover) {
+        if (mSliderAdapter.getCount() <= 1) {
+            return;
+        }
+
         if (mCycleTimer != null) mCycleTimer.cancel();
         if (mCycleTask != null) mCycleTask.cancel();
         if (mResumingTask != null) mResumingTask.cancel();
@@ -263,6 +278,7 @@ public class SliderLayout extends RelativeLayout {
         mSliderDuration = duration;
         mCycleTimer = new Timer();
         mAutoRecover = autoRecover;
+        // TODO - To fix the leak, change this logic.
         mCycleTask = new TimerTask() {
             @Override
             public void run() {
@@ -547,7 +563,7 @@ public class SliderLayout extends RelativeLayout {
     }
 
     public PagerIndicator.IndicatorVisibility getIndicatorVisibility() {
-        if (mIndicator == null) {
+        if (mIndicator != null) {
             return mIndicator.getIndicatorVisibility();
         }
         return PagerIndicator.IndicatorVisibility.Invisible;
@@ -702,7 +718,6 @@ public class SliderLayout extends RelativeLayout {
      * move to next slide.
      */
     public void moveNextPosition(boolean smooth) {
-
         if (getRealAdapter() == null)
             throw new IllegalStateException("You did not set a slider adapter");
 
