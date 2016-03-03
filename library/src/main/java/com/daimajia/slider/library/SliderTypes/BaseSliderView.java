@@ -3,12 +3,25 @@ package com.daimajia.slider.library.SliderTypes;
 import android.content.Context;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.PictureDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 
+import com.bumptech.glide.GenericRequestBuilder;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.model.StreamEncoder;
+import com.bumptech.glide.load.resource.file.FileToStreamDecoder;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.ImageViewTarget;
+import com.bumptech.glide.request.target.Target;
+import com.caverock.androidsvg.PreserveAspectRatio;
+import com.caverock.androidsvg.SVG;
 import com.daimajia.slider.library.R;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.controller.BaseControllerListener;
@@ -21,6 +34,10 @@ import com.facebook.imagepipeline.image.ImageInfo;
 import com.facebook.imagepipeline.request.ImageRequest;
 
 import java.io.File;
+import java.io.InputStream;
+
+import br.com.mauker.svg.SVGDecoder;
+import br.com.mauker.svg.SvgDrawableTranscoder;
 
 /**
  * When you want to make your own slider view, you must extends from this class.
@@ -68,6 +85,8 @@ public abstract class BaseSliderView {
     public enum ScaleType{
         CenterCrop, CenterInside, Fit, FitCenterCrop
     }
+
+    private boolean isSVG = false;
 
     protected BaseSliderView(Context context) {
         mContext = context;
@@ -175,6 +194,11 @@ public abstract class BaseSliderView {
         return this;
     }
 
+    public BaseSliderView setSVG(boolean isSVG) {
+        this.isSVG = isSVG;
+        return this;
+    }
+
     public String getUrl(){
         return mUrl;
     }
@@ -217,6 +241,9 @@ public abstract class BaseSliderView {
      * @param targetImageView where to place image
      */
     protected void bindEventAndShow(final View v, SimpleDraweeView targetImageView){
+        if (targetImageView == null)
+            return;
+
         final BaseSliderView me = this;
 
         v.setOnClickListener(new View.OnClickListener() {
@@ -228,8 +255,6 @@ public abstract class BaseSliderView {
             }
         });
 
-        if (targetImageView == null)
-            return;
 
         if (mLoadListener != null) {
             mLoadListener.onStart(me);
@@ -307,7 +332,115 @@ public abstract class BaseSliderView {
         targetImageView.setController(controller);
    }
 
+    /**
+     * When you want to implement your own slider view, please call this method in the end in `getView()` method
+     * @param v the whole view
+     * @param target The ImageView where you want to place the image
+     */
+    protected void bindEventAndShow(final View v, ImageView target) {
+        if (target == null) {
+            return;
+        }
 
+        final BaseSliderView me = this;
+
+        v.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mOnSliderClickListener != null) {
+                    mOnSliderClickListener.onSliderClick(me);
+                }
+            }
+        });
+
+        if (mLoadListener != null) {
+            mLoadListener.onStart(me);
+        }
+
+        GenericRequestBuilder<Uri, InputStream, SVG, PictureDrawable> requestBuilder;
+        SVGDecoder decoder;
+
+        RequestListener<Object,PictureDrawable> rl = new RequestListener<Object, PictureDrawable>() {
+            @Override
+            public boolean onException(Exception e, Object model, Target<PictureDrawable> target, boolean isFirstResource) {
+                ImageView view = ((ImageViewTarget<?>) target).getView();
+                if (Build.VERSION_CODES.HONEYCOMB <= Build.VERSION.SDK_INT) {
+                    view.setLayerType(ImageView.LAYER_TYPE_NONE, null);
+                }
+
+                if (mLoadListener != null) {
+                    mLoadListener.onEnd(false, me);
+                }
+                if (v.findViewById(R.id.loading_bar) != null) {
+                    v.findViewById(R.id.loading_bar).setVisibility(View.INVISIBLE);
+                }
+
+                return false;
+            }
+
+            @Override
+            public boolean onResourceReady(PictureDrawable resource, Object model, Target<PictureDrawable> target,
+                                           boolean isFromMemoryCache, boolean isFirstResource) {
+                ImageView view = ((ImageViewTarget<?>) target).getView();
+                if (Build.VERSION_CODES.HONEYCOMB <= Build.VERSION.SDK_INT) {
+                    view.setLayerType(ImageView.LAYER_TYPE_SOFTWARE, null);
+                }
+
+                if (v.findViewById(R.id.loading_bar) != null) {
+                    v.findViewById(R.id.loading_bar).setVisibility(View.INVISIBLE);
+                }
+
+                return false;
+            }
+        };
+
+        switch (mScaleType) {
+            case Fit:
+                decoder = new SVGDecoder(PreserveAspectRatio.STRETCH);
+                break;
+            case CenterCrop:
+                decoder = new SVGDecoder(PreserveAspectRatio.FULLSCREEN);
+                break;
+            case FitCenterCrop:
+                decoder = new SVGDecoder(PreserveAspectRatio.FULLSCREEN_START);
+                break;
+            case CenterInside:
+                decoder = new SVGDecoder(PreserveAspectRatio.TOP);
+                break;
+            default:
+                decoder = new SVGDecoder();
+                break;
+        }
+
+        requestBuilder = Glide.with(mContext)
+                .using(Glide.buildStreamModelLoader(Uri.class, mContext), InputStream.class)
+                .from(Uri.class)
+                .as(SVG.class)
+                .transcode(new SvgDrawableTranscoder(), PictureDrawable.class)
+                .sourceEncoder(new StreamEncoder())
+                .cacheDecoder(new FileToStreamDecoder<>(decoder))
+                .decoder(decoder)
+                .animate(android.R.anim.fade_in)
+                .listener(rl);
+
+        if (getEmpty() != 0) {
+            requestBuilder.placeholder(getEmpty());
+        }
+
+        if (getError() != 0) {
+            requestBuilder.error(getError());
+        }
+
+        if (mUrl != null) {
+            requestBuilder = requestBuilder.load(Uri.parse(mUrl));
+        } else {
+            return;
+        }
+
+        requestBuilder
+                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                .into(target);
+    }
 
     public BaseSliderView setScaleType(ScaleType type){
         mScaleType = type;
@@ -316,6 +449,10 @@ public abstract class BaseSliderView {
 
     public ScaleType getScaleType(){
         return mScaleType;
+    }
+
+    public boolean isSVG() {
+        return isSVG;
     }
 
     /**

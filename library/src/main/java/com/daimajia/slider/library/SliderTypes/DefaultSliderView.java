@@ -3,6 +3,7 @@ package com.daimajia.slider.library.SliderTypes;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
 
 import com.daimajia.slider.library.R;
 import com.facebook.drawee.view.SimpleDraweeView;
@@ -20,9 +21,19 @@ public class DefaultSliderView extends BaseSliderView {
 
     @Override
     public View getView() {
-        View v = LayoutInflater.from(getContext()).inflate(R.layout.render_type_default,null);
-        SimpleDraweeView target = (SimpleDraweeView)v.findViewById(R.id.daimajia_slider_image);
-        bindEventAndShow(v, target);
+        View v;
+
+        if (isSVG()) {
+            v = LayoutInflater.from(getContext()).inflate(R.layout.render_type_svg,null);
+            ImageView target = (ImageView) v.findViewById(R.id.daimajia_slider_image);
+            bindEventAndShow(v, target);
+        }
+        else {
+            v = LayoutInflater.from(getContext()).inflate(R.layout.render_type_default,null);
+            SimpleDraweeView target = (SimpleDraweeView)v.findViewById(R.id.daimajia_slider_image);
+            bindEventAndShow(v, target);
+        }
+
         return v;
     }
 }
